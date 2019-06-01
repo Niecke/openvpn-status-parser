@@ -81,7 +81,7 @@ class OpenVPNStatusParser(object):
         try:
             self._connected_clients[row[1]] = dict(zip(self.topics_for["CLIENT_LIST"], row[1:]))
             self._connected_clients[row[1]]["connected_since"] = (
-                datetime.datetime.fromtimestamp(int(row[-1])))
+                datetime.datetime.fromtimestamp(int(row[8])))
         except IndexError:
             logging.error("CLIENT_LIST row is invalid: %s", row)
             raise exceptions.MalformedFileException("CLIENT_LIST row is invalid")
@@ -92,8 +92,8 @@ class OpenVPNStatusParser(object):
         if len(row[1:]) != len(self.topics_for.get("ROUTING_TABLE", [])):
             raise exceptions.MalformedFileException("Invalid number of topics for ROUTING_TABLE row")
         try:
-            self._routing_table[row[2]] = dict(zip(self.topics_for["ROUTING_TABLE"], row[1:]))
-            self._routing_table[row[2]]["last_ref"] = datetime.datetime.fromtimestamp(int(row[-1]))
+            self._routing_table[row[2] + row[1]] = dict(zip(self.topics_for["ROUTING_TABLE"], row[1:]))
+            self._routing_table[row[2] + row[1]]["last_ref"] = datetime.datetime.fromtimestamp(int(row[-1]))
         except IndexError:
             logging.error("ROUTING_TABLE row is invalid: %s", row)
             raise exceptions.MalformedFileException("ROUTING_TABLE row is invalid")
@@ -114,7 +114,7 @@ class OpenVPNStatusParser(object):
         self._connected_clients = {}
         self._routing_table = {}
         self.topics_for = {}
-        csvreader = csv.reader(open(self.filename), delimiter='\t')
+        csvreader = csv.reader(open(self.filename, 'r', newline=''), delimiter='\t')
         for row in csvreader:
             row_title = row[0]
             if row_title in self.title_processors:
